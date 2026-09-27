@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: pinvault-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/pinvault}
+    username: ${DB_USER:pinvault}
+    password: ${DB_PASSWORD:pinvault}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+server:
+  port: ${PORT:8080}
+
+app:
+  jwt:
+    # À surcharger en production via la variable d'environnement JWT_SECRET (>= 32 caractères)
+    secret: ${JWT_SECRET:dev-only-secret-change-me-please-0123456789}
+    validity: PT24H
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
