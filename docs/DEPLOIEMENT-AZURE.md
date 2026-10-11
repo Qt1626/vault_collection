@@ -87,7 +87,7 @@ Réponds `yes` à la première question. Tu es maintenant sur le serveur (l'invi
 **Si ton dépôt GitHub est public :**
 
 ```bash
-git clone https://github.com/<ton-pseudo>/disney-pins.git ~/disney-pins
+git clone https://github.com/<ton-pseudo>/vault_collection.git ~/disney-pins
 ```
 
 **S'il est privé**, crée une « deploy key » (accès en lecture seule à ce seul dépôt) :
@@ -101,7 +101,7 @@ printf 'Host github.com\n  IdentityFile ~/.ssh/github_repo\n' >> ~/.ssh/config
 Sur GitHub : dépôt → **Settings → Deploy keys → Add deploy key**, colle la clé, **sans** cocher « Allow write access ». Puis :
 
 ```bash
-git clone git@github.com:<ton-pseudo>/disney-pins.git ~/disney-pins
+git clone git@github.com:<ton-pseudo>/vault_collection.git ~/disney-pins
 ```
 
 ## Étape 7 — Préparer le serveur
