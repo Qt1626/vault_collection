@@ -8,17 +8,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Parcours complet contre une vraie base PostgreSQL lancée par Testcontainers (Docker requis). */
-@SpringBootTest
+@SpringBootTest(properties = "app.upload.dir=target/test-uploads")
 @AutoConfigureMockMvc
 @Testcontainers
 class PinVaultIntegrationTest {
@@ -98,6 +100,50 @@ class PinVaultIntegrationTest {
                         .header("Authorization", "Bearer " + eve)
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void uploadImageThenUseItOnAPin() throws Exception {
+        String token = register("carol", "carol@example.com");
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+
+        // non connecté : refusé
+        mvc.perform(multipart("/api/images").file(new MockMultipartFile("file", "pin.png", "image/png", png)))
+                .andExpect(status().isUnauthorized());
+
+        String url = json.readTree(mvc.perform(multipart("/api/images")
+                        .file(new MockMultipartFile("file", "pin.png", "image/png", png))
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString()).get("url").asText();
+
+        // lecture publique, format détecté à partir du contenu
+        mvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/png"))
+                .andExpect(content().bytes(png));
+
+        String pinBody = "{\"name\":\"Pin avec photo\",\"park\":\"OTHER\",\"edition\":\"OPEN_EDITION\",\"imageUrl\":\"" + url + "\"}";
+        mvc.perform(post("/api/pins")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(pinBody))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.imageUrl").value(url));
+    }
+
+    @Test
+    void uploadRejectsNonImagesAndTraversal() throws Exception {
+        String token = register("dave", "dave@example.com");
+
+        // un faux .png (contenu texte) est refusé : on se fie aux octets, pas au nom ni au Content-Type
+        mvc.perform(multipart("/api/images")
+                        .file(new MockMultipartFile("file", "evil.png", "image/png", "<script>".getBytes()))
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+
+        // seuls les noms générés par le serveur sont servis
+        mvc.perform(get("/api/images/application.yml"))
+                .andExpect(status().isNotFound());
     }
 
     private String register(String username, String email) throws Exception {

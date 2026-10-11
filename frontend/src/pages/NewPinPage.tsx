@@ -1,9 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError, api } from '../api/client'
 import { EDITIONS, EDITION_LABELS, PARKS, PARK_LABELS, type Edition, type Park, type PinInput } from '../api/types'
+import { PinImage } from '../components/PinImage'
 import { Button, ErrorBox, Field, Input, Select } from '../components/ui'
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
 export function NewPinPage() {
   const navigate = useNavigate()
@@ -19,6 +22,7 @@ export function NewPinPage() {
     imageUrl: '',
     description: '',
   })
+  const [fileError, setFileError] = useState<string | null>(null)
 
   const create = useMutation({
     mutationFn: () => {
@@ -40,6 +44,24 @@ export function NewPinPage() {
       navigate(`/pins/${pin.id}`)
     },
   })
+
+  const upload = useMutation({
+    mutationFn: (file: File) => api.uploadImage(file),
+    onSuccess: ({ url }) => setForm((f) => ({ ...f, imageUrl: url })),
+  })
+
+  const onFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (file.size > MAX_IMAGE_SIZE) {
+      upload.reset()
+      setFileError('Image trop lourde (5 Mo maximum)')
+      return
+    }
+    setFileError(null)
+    upload.mutate(file)
+  }
 
   const errors = create.error instanceof ApiError ? create.error.fieldErrors : undefined
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value })
@@ -87,10 +109,26 @@ export function NewPinPage() {
         <Field label="Année de sortie" error={errors?.releaseYear}>
           <Input type="number" min={1955} max={2100} value={form.releaseYear} onChange={set('releaseYear')} />
         </Field>
-        <div className="sm:col-span-2">
-          <Field label="URL de la photo" error={errors?.imageUrl}>
-            <Input type="url" placeholder="https://…" value={form.imageUrl} onChange={set('imageUrl')} />
-          </Field>
+        <div className="flex gap-4 sm:col-span-2">
+          <PinImage src={form.imageUrl || null} alt="Aperçu" className="h-28 w-28 shrink-0 rounded-xl" />
+          <div className="flex-1 space-y-2">
+            <Field label="Photo" error={errors?.imageUrl ?? fileError ?? upload.error?.message}>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={onFile}
+                disabled={upload.isPending}
+                className="block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:font-semibold file:text-brand-700"
+              />
+            </Field>
+            {upload.isPending && <p className="text-xs text-slate-500">Envoi en cours…</p>}
+            <Input
+              type="text"
+              placeholder="…ou colle l'URL d'une image (https://…)"
+              value={form.imageUrl}
+              onChange={set('imageUrl')}
+            />
+          </div>
         </div>
         <div className="sm:col-span-2">
           <Field label="Description" error={errors?.description}>
@@ -109,7 +147,7 @@ export function NewPinPage() {
           </div>
         )}
         <div className="sm:col-span-2">
-          <Button type="submit" disabled={create.isPending}>
+          <Button type="submit" disabled={create.isPending || upload.isPending}>
             Enregistrer
           </Button>
         </div>

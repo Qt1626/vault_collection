@@ -1,0 +1,25 @@
+{
+  "name": "PinVault (Java 21 + Node 22 + PostgreSQL)",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspaces/disney-pins",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [8080, 5173],
+  "portsAttributes": {
+    "8080": { "label": "API Spring Boot" },
+    "5173": { "label": "Frontend Vite", "onAutoForward": "openBrowser" }
+  },
+  "postCreateCommand": "cd frontend && npm ci && cd ../backend && mvn -q -B dependency:go-offline",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-spring-boot",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker",
+        "oxc.oxc-vscode"
+      ]
+    }
+  }
+}

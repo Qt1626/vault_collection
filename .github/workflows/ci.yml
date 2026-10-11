@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (Java 21 / Spring Boot)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build & tests (Testcontainers)
+        run: mvn -B verify
+
+  frontend:
+    name: Frontend (React / TypeScript)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  docker:
+    name: Docker Compose (smoke test)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Préparer le .env
+        run: cp .env.example .env
+      - name: Construire et démarrer la stack
+        run: docker compose up -d --build --wait --wait-timeout 180
+      - name: Vérifier le site et l'API à travers Nginx
+        run: |
+          curl -fsS http://localhost:3000/ | grep -q '<div id="root">'
+          curl -fsS http://localhost:3000/api/pins | grep -q totalElements
+      - name: Logs en cas d'échec
+        if: failure()
+        run: docker compose logs
+      - name: Arrêter
+        if: always()
+        run: docker compose down -v

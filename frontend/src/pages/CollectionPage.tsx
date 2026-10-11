@@ -7,7 +7,7 @@ import { useAuth } from '../auth/AuthContext'
 import { PinCard } from '../components/PinCard'
 import { ErrorBox } from '../components/ui'
 
-/** Affiche ma collection (/collection) ou celle d'un autre membre (/u/:username). */
+/** Ma collection de pin's (/pins/collection) ou celle d'un autre membre (/u/:username/pins). */
 export function CollectionPage() {
   const params = useParams()
   const { username: me } = useAuth()
@@ -27,12 +27,12 @@ export function CollectionPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold">{isMine ? 'Ma collection' : `Collection de @${username}`}</h1>
+          <h1 className="text-2xl font-bold">{isMine ? 'Mes pin\'s' : `Pin's de @${username}`}</h1>
           {isMine && (
             <p className="text-sm text-slate-500">
               Lien public :{' '}
-              <Link to={`/u/${username}`} className="text-brand-600 hover:underline">
-                /u/{username}
+              <Link to={`/u/${username}/pins`} className="text-brand-600 hover:underline">
+                /u/{username}/pins
               </Link>
             </p>
           )}
@@ -60,7 +60,7 @@ export function CollectionPage() {
         <p className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
           Rien ici pour l'instant.{' '}
           {isMine && (
-            <Link to="/" className="text-brand-600 hover:underline">
+            <Link to="/pins" className="text-brand-600 hover:underline">
               Parcours le catalogue
             </Link>
           )}

@@ -12,3 +12,17 @@
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
+
+/* Section Pokémon : mêmes composants, couleurs rouges. Tailwind v4 lit les couleurs du thème via des variables CSS. */
+.theme-pokemon {
+  --color-brand-50: #fef2f2;
+  --color-brand-100: #fee2e2;
+  --color-brand-500: #e3350d;
+  --color-brand-600: #c62d0b;
+  --color-brand-700: #9f230a;
+}
+
+/* Accueil : en-tête neutre */
+.theme-home {
+  --color-brand-700: #1e293b;
+}

@@ -1,0 +1,42 @@
+# Surcouche pour le serveur (VM Azure) : ajoute Caddy (HTTPS automatique) devant le site
+# et ferme tous les autres ports. S'utilise toujours avec le docker-compose.yml principal :
+#
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.server.yml up -d --build
+#
+# (le script deploy/deploy.sh le fait pour toi)
+
+services:
+  db:
+    ports: !reset []
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?definir DB_PASSWORD dans .env}
+
+  backend:
+    ports: !reset []
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD:?definir DB_PASSWORD dans .env}
+      JWT_SECRET: ${JWT_SECRET:?definir JWT_SECRET dans .env (32 caracteres minimum)}
+      CORS_ORIGINS: https://${DOMAIN:?definir DOMAIN dans .env}
+
+  frontend:
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    environment:
+      DOMAIN: ${DOMAIN:?definir DOMAIN dans .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data       # certificats HTTPS (Let's Encrypt)
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

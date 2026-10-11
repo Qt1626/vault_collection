@@ -1,0 +1,41 @@
+name: Deploy
+
+# Met à jour le serveur Azure quand la CI est verte sur main.
+# Secrets GitHub à créer (Settings > Secrets and variables > Actions) :
+#   AZURE_VM_HOST     adresse du serveur (ex. pinvault-quentin.francecentral.cloudapp.azure.com)
+#   AZURE_VM_USER     utilisateur SSH (ex. azureuser)
+#   AZURE_VM_SSH_KEY  clé privée SSH dédiée au déploiement (voir docs/DEPLOIEMENT-AZURE.md)
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Déployer sur la VM
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          command_timeout: 20m
+          script: bash ~/disney-pins/deploy/deploy.sh
+
+      - name: Vérifier que le site répond
+        run: |
+          for i in $(seq 1 10); do
+            curl -fsS "https://${{ secrets.AZURE_VM_HOST }}/api/pins" > /dev/null && exit 0
+            sleep 6
+          done
+          exit 1

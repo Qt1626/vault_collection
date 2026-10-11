@@ -18,7 +18,10 @@ public final class PinDtos {
             @NotNull Edition edition,
             @Positive Integer editionSize,
             @Min(1955) @Max(2100) Integer releaseYear,
-            @Size(max = 500) @Pattern(regexp = "^(https?://.*)?$", message = "doit être une URL http(s)") String imageUrl) {
+            @Size(max = 500)
+            @Pattern(regexp = "^(https?://\\S+|/api/images/[0-9a-f-]{36}\\.(jpg|png|gif|webp))?$",
+                    message = "doit être une URL http(s) ou une image envoyée sur PinVault")
+            String imageUrl) {
     }
 
     public record PinResponse(
@@ -35,7 +38,7 @@ public final class PinDtos {
             String createdBy,
             Instant createdAt) {
 
-        static PinResponse from(Pin p) {
+        public static PinResponse from(Pin p) {
             return new PinResponse(p.getId(), p.getName(), p.getDescription(), p.getCharacterName(),
                     p.getSeries(), p.getPark(), p.getEdition(), p.getEditionSize(), p.getReleaseYear(),
                     p.getImageUrl(), p.getCreatedBy() == null ? null : p.getCreatedBy().getUsername(),

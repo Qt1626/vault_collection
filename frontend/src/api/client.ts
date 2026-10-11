@@ -1,4 +1,16 @@
-import type { AuthResponse, CollectionItem, CollectionStatus, Page, Pin, PinDetail, PinInput } from './types'
+import type {
+  AuthResponse,
+  CardItem,
+  CardItemInput,
+  CardSearchResult,
+  CollectionItem,
+  CollectionStatus,
+  Page,
+  Pin,
+  PinDetail,
+  PinInput,
+  PokemonCard,
+} from './types'
 
 const TOKEN_KEY = 'pinvault.token'
 
@@ -21,7 +33,8 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
-  if (init.body) headers.set('Content-Type', 'application/json')
+  // FormData (upload) : le navigateur fixe lui-même le Content-Type multipart avec la boundary
+  if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   const token = tokenStore.get()
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
@@ -67,6 +80,11 @@ export const api = {
   },
   getPin: (id: number) => request<PinDetail>(`/pins/${id}`),
   createPin: (input: PinInput) => request<Pin>('/pins', { method: 'POST', body: JSON.stringify(input) }),
+  uploadImage: (file: File) => {
+    const body = new FormData()
+    body.append('file', file)
+    return request<{ url: string }>('/images', { method: 'POST', body })
+  },
 
   myCollection: (status?: CollectionStatus) =>
     request<CollectionItem[]>(`/me/collection${status ? `?status=${status}` : ''}`),
@@ -75,4 +93,15 @@ export const api = {
   addToCollection: (pinId: number, status: CollectionStatus) =>
     request<CollectionItem>('/me/collection', { method: 'POST', body: JSON.stringify({ pinId, status }) }),
   removeFromCollection: (itemId: number) => request<void>(`/me/collection/${itemId}`, { method: 'DELETE' }),
+
+  // Cartes Pokémon
+  searchCards: (q: string, page = 0) =>
+    request<CardSearchResult>(`/pokemon/cards?${new URLSearchParams({ q, page: String(page) })}`),
+  getCard: (id: string) => request<PokemonCard>(`/pokemon/cards/${encodeURIComponent(id)}`),
+  myCards: () => request<CardItem[]>('/me/pokemon'),
+  userCards: (username: string) => request<CardItem[]>(`/users/${encodeURIComponent(username)}/pokemon`),
+  addCard: (input: CardItemInput) => request<CardItem>('/me/pokemon', { method: 'POST', body: JSON.stringify(input) }),
+  updateCard: (itemId: number, input: CardItemInput) =>
+    request<CardItem>(`/me/pokemon/${itemId}`, { method: 'PUT', body: JSON.stringify(input) }),
+  removeCard: (itemId: number) => request<void>(`/me/pokemon/${itemId}`, { method: 'DELETE' }),
 }

@@ -1,0 +1,57 @@
+# Lance PinVault à partir des images publiées sur Docker Hub (sans rien compiler).
+#
+#   cp .env.example .env    puis renseigner DOCKERHUB_USERNAME, DB_PASSWORD et JWT_SECRET
+#   docker compose -f docker-compose.prod.yml up -d      → http://localhost:3000
+
+name: pinvault-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-pinvault}
+      POSTGRES_USER: ${DB_USER:-pinvault}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?definir DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    image: ${DOCKERHUB_USERNAME:?definir DOCKERHUB_USERNAME}/pinvault-api:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-pinvault}
+      DB_USER: ${DB_USER:-pinvault}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?definir JWT_SECRET (32 caracteres minimum)}
+      CORS_ORIGINS: ${PUBLIC_URL:-http://localhost:3000}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 3s
+      start_period: 40s
+      retries: 5
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/pinvault-web:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:
+  uploads:

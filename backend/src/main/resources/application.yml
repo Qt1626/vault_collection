@@ -11,6 +11,10 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 server:
   port: ${PORT:8080}
@@ -22,6 +26,13 @@ app:
     validity: PT24H
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+  tcgdex:
+    # API publique des cartes Pokémon (https://tcgdex.dev), gratuite et sans clé
+    base-url: ${TCGDEX_URL:https://api.tcgdex.net/v2}
+    language: fr
+  upload:
+    # Dossier des photos de pin's (en Docker : volume monté sur /data/uploads)
+    dir: ${UPLOAD_DIR:./uploads}
 
 management:
   endpoints:

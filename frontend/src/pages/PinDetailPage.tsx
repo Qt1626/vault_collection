@@ -42,7 +42,7 @@ export function PinDetailPage() {
 
       <div className="space-y-5">
         <div>
-          <Link to="/" className="text-sm text-brand-600 hover:underline">
+          <Link to="/pins" className="text-sm text-brand-600 hover:underline">
             ← Catalogue
           </Link>
           <h1 className="mt-2 text-3xl font-bold">{pin.name}</h1>
