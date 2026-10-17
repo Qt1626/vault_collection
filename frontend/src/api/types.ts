@@ -101,6 +101,9 @@ export interface CollectionItem {
   defect: string | null
   /** Avec (true) ou sans (false) le carton d'origine ; null = non précisé */
   backingCard: boolean | null
+  /** Prix de mon exemplaire (saisi à la main) */
+  manualPrice: number | null
+  totalPrice: number | null
   addedAt: string
 }
 
@@ -109,6 +112,7 @@ export interface CollectionItemUpdate {
   note: string | null
   defect: string | null
   backingCard: boolean | null
+  manualPrice: number | null
 }
 
 export interface AuthResponse {

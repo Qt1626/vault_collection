@@ -6,6 +6,7 @@ import { CARD_STATUS_LABELS, type PokemonCard } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 import { CardImage, CardItemForm, CardItemTags } from '../components/pokemon'
 import { formatEuro } from '../components/format'
+import { cardEbayQuery, ebaySoldUrl } from '../components/pricing'
 import { ErrorBox } from '../components/ui'
 
 export function PokemonCardPage() {
@@ -139,6 +140,14 @@ function Prices({ card }: { card: PokemonCard }) {
         Cote globale Cardmarket (toutes langues et tous états confondus), fournie par TCGdex. Dans ta collection, elle
         est ajustée selon la langue et l'état de ton exemplaire, ou remplacée par ton propre prix.
       </p>
+      <a
+        href={ebaySoldUrl(cardEbayQuery(card, null, null))}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 inline-block text-sm font-semibold text-brand-600 hover:underline"
+      >
+        Voir les ventes réussies sur eBay ↗
+      </a>
     </div>
   )
 }

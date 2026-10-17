@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { api } from '../api/client'
 import { STATUS_LABELS, type CollectionItem } from '../api/types'
+import { formatEuro } from './format'
+import { ebaySoldUrl, pinEbayQuery } from './pricing'
 import { Button, ErrorBox, Field, Input, Select } from './ui'
 
 type Carton = 'unknown' | 'with' | 'without'
@@ -17,6 +19,7 @@ export function PinCopyEditor({ item }: { item: CollectionItem }) {
     carton: toCarton(item.backingCard),
     defect: item.defect ?? '',
     note: item.note ?? '',
+    price: item.manualPrice != null ? String(item.manualPrice) : '',
   })
   const [saved, setSaved] = useState(false)
 
@@ -27,6 +30,7 @@ export function PinCopyEditor({ item }: { item: CollectionItem }) {
         backingCard: fromCarton(form.carton),
         defect: form.defect.trim() || null,
         note: form.note.trim() || null,
+        manualPrice: form.price.trim() ? Number(form.price.replace(',', '.')) : null,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collection'] })
@@ -68,6 +72,27 @@ export function PinCopyEditor({ item }: { item: CollectionItem }) {
           </Field>
         </div>
         <div className="sm:col-span-2">
+          <Field label="Mon prix (€) — facultatif">
+            <Input
+              type="number"
+              min={0}
+              step={0.01}
+              inputMode="decimal"
+              placeholder="ex. 15"
+              value={form.price}
+              onChange={set('price')}
+            />
+          </Field>
+          <a
+            href={ebaySoldUrl(pinEbayQuery(item.pin))}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1 inline-block text-xs font-semibold text-brand-600 hover:underline"
+          >
+            Voir les ventes réussies sur eBay ↗
+          </a>
+        </div>
+        <div className="sm:col-span-2">
           <Field label="Note personnelle">
             <Input value={form.note} maxLength={500} placeholder="Ex. : acheté à Disneyland Paris" onChange={set('note')} />
           </Field>
@@ -93,6 +118,11 @@ export function PinCopyTags({ item }: { item: CollectionItem }) {
       )}
       {item.backingCard === false && (
         <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">Sans carton</span>
+      )}
+      {item.manualPrice != null && (
+        <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-semibold text-green-800">
+          {formatEuro(item.totalPrice)}
+        </span>
       )}
       {item.defect && (
         <span title={item.defect} className="max-w-full truncate rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">

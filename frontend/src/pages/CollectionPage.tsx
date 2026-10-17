@@ -6,6 +6,7 @@ import { STATUSES, STATUS_LABELS, type CollectionStatus } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 import { PinCard } from '../components/PinCard'
 import { PinCopyTags } from '../components/PinCopyEditor'
+import { formatEuro } from '../components/format'
 import { ErrorBox } from '../components/ui'
 
 /** Ma collection de pin's (/pins/collection) ou celle d'un autre membre (/u/:username/pins). */
@@ -23,6 +24,8 @@ export function CollectionPage() {
 
   const items = data?.filter((i) => i.status === tab) ?? []
   const count = (s: CollectionStatus) => data?.filter((i) => i.status === s).reduce((n, i) => n + i.quantity, 0) ?? 0
+  const value = items.reduce((sum, i) => sum + (i.totalPrice ?? 0), 0)
+  const priced = items.filter((i) => i.manualPrice != null).length
 
   return (
     <div className="space-y-6">
@@ -53,6 +56,21 @@ export function CollectionPage() {
           </button>
         ))}
       </div>
+
+      {items.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 rounded-2xl bg-white p-4 text-center shadow-sm">
+          <div>
+            <div className="text-xl font-bold text-brand-600">{formatEuro(value)}</div>
+            <div className="text-xs text-slate-500">valeur (pin's avec un prix)</div>
+          </div>
+          <div>
+            <div className="text-xl font-bold text-brand-600">
+              {priced} / {items.length}
+            </div>
+            <div className="text-xs text-slate-500">pin's avec un prix</div>
+          </div>
+        </div>
+      )}
 
       {error && <ErrorBox message={error.message} />}
       {isPending && <p className="text-slate-500">Chargement…</p>}

@@ -1,9 +1,12 @@
 import {
   CONDITION_FACTORS,
+  GRADING_LABELS,
   LANGUAGE_FACTORS,
   type CardCondition,
   type CardLanguage,
   type CardVariant,
+  type GradingCompany,
+  type Pin,
   type PokemonCard,
 } from '../api/types'
 
@@ -36,4 +39,26 @@ export function estimatePrice(card: PokemonCard, variant: CardVariant, language:
   const market = (foil ? p.trendHolo : null) ?? p.trend ?? p.avg
   if (market == null) return null
   return Math.round(market * LANGUAGE_FACTORS[language] * CONDITION_FACTORS[condition] * 100) / 100
+}
+
+/** Recherche eBay limitée aux objets VENDUS (ventes réussies), sur eBay France. */
+export function ebaySoldUrl(query: string) {
+  const params = new URLSearchParams({ _nkw: query, LH_Sold: '1', LH_Complete: '1' })
+  return `https://www.ebay.fr/sch/i.html?${params}`
+}
+
+/** Ex. « Dracaufeu 4/102 PSA 9 » : nom + numéro (+ gradation), ce que les vendeurs mettent dans leurs titres. */
+export function cardEbayQuery(card: PokemonCard, gradingCompany: GradingCompany | null, grade: number | null) {
+  const number = card.setCardCount ? `${card.localId}/${card.setCardCount}` : card.localId
+  const grading =
+    gradingCompany && gradingCompany !== 'OTHER' && grade != null
+      ? ` ${GRADING_LABELS[gradingCompany].split(' ')[0]} ${grade}`
+      : ''
+  return `${card.name} ${number}${grading}`
+}
+
+/** Ex. « pin Mickey classique LE 500 ». */
+export function pinEbayQuery(pin: Pin) {
+  const le = pin.editionSize ? ` LE ${pin.editionSize}` : ''
+  return `pin ${pin.name}${le}`
 }

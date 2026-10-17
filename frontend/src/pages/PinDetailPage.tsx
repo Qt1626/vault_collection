@@ -5,6 +5,7 @@ import { EDITION_LABELS, PARK_LABELS, STATUSES, STATUS_LABELS, type CollectionSt
 import { useAuth } from '../auth/AuthContext'
 import { PinCopyEditor } from '../components/PinCopyEditor'
 import { PinImage } from '../components/PinImage'
+import { ebaySoldUrl, pinEbayQuery } from '../components/pricing'
 import { Button, ErrorBox } from '../components/ui'
 
 export function PinDetailPage() {
@@ -59,6 +60,15 @@ export function PinDetailPage() {
         </dl>
 
         {pin.description && <p className="whitespace-pre-line text-slate-700">{pin.description}</p>}
+
+        <a
+          href={ebaySoldUrl(pinEbayQuery(pin))}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block text-sm font-semibold text-brand-600 hover:underline"
+        >
+          Voir les ventes réussies sur eBay ↗
+        </a>
 
         <div className="flex gap-6 rounded-xl bg-white p-4 text-center shadow-sm">
           <Stat value={owners} label="le possèdent" />

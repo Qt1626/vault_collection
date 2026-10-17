@@ -123,10 +123,12 @@ class PinVaultIntegrationTest {
         mvc.perform(patch("/api/me/collection/" + itemId)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"quantity\":1,\"defect\":\"Petite rayure\",\"backingCard\":false}"))
+                        .content("{\"quantity\":2,\"defect\":\"Petite rayure\",\"backingCard\":false,\"manualPrice\":12.5}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.defect").value("Petite rayure"))
-                .andExpect(jsonPath("$.backingCard").value(false));
+                .andExpect(jsonPath("$.backingCard").value(false))
+                .andExpect(jsonPath("$.manualPrice").value(12.5))
+                .andExpect(jsonPath("$.totalPrice").value(25.0));
     }
 
     @Test

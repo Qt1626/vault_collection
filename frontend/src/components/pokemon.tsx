@@ -20,7 +20,7 @@ import {
   type PokemonCard,
 } from '../api/types'
 import { formatEuro } from './format'
-import { cardmarketUrl, estimatePrice } from './pricing'
+import { cardEbayQuery, cardmarketUrl, ebaySoldUrl, estimatePrice } from './pricing'
 import { Button, ErrorBox, Field, Input, Select } from './ui'
 
 /** Image TCGdex : l'API fournit une URL de base à compléter par la qualité voulue. */
@@ -251,14 +251,30 @@ export function CardItemForm({
               {CONDITION_FACTORS[form.condition].toLocaleString('fr-FR')} état)
             </span>
           </span>
+          <span className="flex flex-wrap gap-3">
           <a
             href={cardmarketUrl(card, form.language, form.condition)}
             target="_blank"
             rel="noreferrer"
             className="text-xs font-semibold text-brand-600 hover:underline"
           >
-            Voir le prix réel sur Cardmarket ↗
+            Prix réel sur Cardmarket ↗
           </a>
+          <a
+            href={ebaySoldUrl(
+              cardEbayQuery(
+                card,
+                form.graded ? form.gradingCompany : null,
+                form.graded ? Number(form.grade.replace(',', '.')) : null,
+              ),
+            )}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs font-semibold text-brand-600 hover:underline"
+          >
+            Ventes réussies eBay ↗
+          </a>
+          </span>
         </div>
         <Field label="Mon prix (€) — facultatif, remplace l'estimation">
           <Input

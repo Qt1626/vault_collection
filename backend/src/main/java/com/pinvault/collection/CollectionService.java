@@ -51,6 +51,7 @@ public class CollectionService {
         CollectionItem item = new CollectionItem(user, pin, req.status(), quantity, blankToNull(req.note()));
         item.setDefect(blankToNull(req.defect()));
         item.setBackingCard(req.backingCard());
+        item.setManualPrice(money(req.manualPrice()));
         return toResponse(items.save(item));
     }
 
@@ -61,6 +62,7 @@ public class CollectionService {
         item.setNote(blankToNull(req.note()));
         item.setDefect(blankToNull(req.defect()));
         item.setBackingCard(req.backingCard());
+        item.setManualPrice(money(req.manualPrice()));
         return toResponse(item);
     }
 
@@ -83,12 +85,19 @@ public class CollectionService {
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
     }
 
+    private static java.math.BigDecimal money(java.math.BigDecimal value) {
+        return value == null ? null : value.setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
     private static String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
     private static CollectionItemResponse toResponse(CollectionItem c) {
         return new CollectionItemResponse(c.getId(), PinResponse.from(c.getPin()), c.getStatus(),
-                c.getQuantity(), c.getNote(), c.getDefect(), c.getBackingCard(), c.getAddedAt());
+                c.getQuantity(), c.getNote(), c.getDefect(), c.getBackingCard(), c.getManualPrice(),
+                c.getManualPrice() == null ? null
+                        : c.getManualPrice().multiply(java.math.BigDecimal.valueOf(c.getQuantity())),
+                c.getAddedAt());
     }
 }

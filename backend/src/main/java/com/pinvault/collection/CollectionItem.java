@@ -41,6 +41,10 @@ public class CollectionItem {
     @Column(name = "backing_card")
     private Boolean backingCard;
 
+    /** Prix de mon exemplaire, saisi par le membre (ex. d'après les ventes réussies eBay). */
+    @Column(name = "manual_price", precision = 10, scale = 2)
+    private java.math.BigDecimal manualPrice;
+
     @Column(name = "added_at", nullable = false, updatable = false)
     private Instant addedAt = Instant.now();
 
@@ -64,9 +68,11 @@ public class CollectionItem {
     public Instant getAddedAt() { return addedAt; }
     public String getDefect() { return defect; }
     public Boolean getBackingCard() { return backingCard; }
+    public java.math.BigDecimal getManualPrice() { return manualPrice; }
 
     public void setQuantity(int quantity) { this.quantity = quantity; }
     public void setNote(String note) { this.note = note; }
     public void setDefect(String defect) { this.defect = defect; }
     public void setBackingCard(Boolean backingCard) { this.backingCard = backingCard; }
+    public void setManualPrice(java.math.BigDecimal manualPrice) { this.manualPrice = manualPrice; }
 }
