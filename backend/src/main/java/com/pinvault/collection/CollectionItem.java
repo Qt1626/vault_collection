@@ -33,6 +33,14 @@ public class CollectionItem {
     @Column(length = 500)
     private String note;
 
+    /** Défaut de mon exemplaire (rayure, attache manquante…). */
+    @Column(length = 500)
+    private String defect;
+
+    /** Avec (true) ou sans (false) le carton d'origine ; null = non précisé. */
+    @Column(name = "backing_card")
+    private Boolean backingCard;
+
     @Column(name = "added_at", nullable = false, updatable = false)
     private Instant addedAt = Instant.now();
 
@@ -54,7 +62,11 @@ public class CollectionItem {
     public int getQuantity() { return quantity; }
     public String getNote() { return note; }
     public Instant getAddedAt() { return addedAt; }
+    public String getDefect() { return defect; }
+    public Boolean getBackingCard() { return backingCard; }
 
     public void setQuantity(int quantity) { this.quantity = quantity; }
     public void setNote(String note) { this.note = note; }
+    public void setDefect(String defect) { this.defect = defect; }
+    public void setBackingCard(Boolean backingCard) { this.backingCard = backingCard; }
 }

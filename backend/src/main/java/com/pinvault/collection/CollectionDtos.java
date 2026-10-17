@@ -17,15 +17,20 @@ public final class CollectionDtos {
             @NotNull Long pinId,
             @NotNull CollectionStatus status,
             @Min(1) @Max(999) Integer quantity,
-            @Size(max = 500) String note) {
+            @Size(max = 500) String note,
+            @Size(max = 500) String defect,
+            Boolean backingCard) {
     }
 
     public record UpdateItemRequest(
             @NotNull @Min(1) @Max(999) Integer quantity,
-            @Size(max = 500) String note) {
+            @Size(max = 500) String note,
+            @Size(max = 500) String defect,
+            Boolean backingCard) {
     }
 
     public record CollectionItemResponse(
-            Long id, PinResponse pin, CollectionStatus status, int quantity, String note, Instant addedAt) {
+            Long id, PinResponse pin, CollectionStatus status, int quantity, String note,
+            String defect, Boolean backingCard, Instant addedAt) {
     }
 }

@@ -48,14 +48,19 @@ public class CollectionService {
             throw new ConflictException("Ce pin est déjà dans cette liste");
         });
         int quantity = req.quantity() == null ? 1 : req.quantity();
-        return toResponse(items.save(new CollectionItem(user, pin, req.status(), quantity, req.note())));
+        CollectionItem item = new CollectionItem(user, pin, req.status(), quantity, blankToNull(req.note()));
+        item.setDefect(blankToNull(req.defect()));
+        item.setBackingCard(req.backingCard());
+        return toResponse(items.save(item));
     }
 
     @Transactional
     public CollectionItemResponse update(String username, Long itemId, UpdateItemRequest req) {
         CollectionItem item = owned(username, itemId);
         item.setQuantity(req.quantity());
-        item.setNote(req.note());
+        item.setNote(blankToNull(req.note()));
+        item.setDefect(blankToNull(req.defect()));
+        item.setBackingCard(req.backingCard());
         return toResponse(item);
     }
 
@@ -78,8 +83,12 @@ public class CollectionService {
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
     }
 
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     private static CollectionItemResponse toResponse(CollectionItem c) {
         return new CollectionItemResponse(c.getId(), PinResponse.from(c.getPin()), c.getStatus(),
-                c.getQuantity(), c.getNote(), c.getAddedAt());
+                c.getQuantity(), c.getNote(), c.getDefect(), c.getBackingCard(), c.getAddedAt());
     }
 }

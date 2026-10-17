@@ -136,7 +136,8 @@ function Prices({ card }: { card: PokemonCard }) {
         <p className="mt-2 text-sm text-slate-500">Pas de cote disponible pour cette carte.</p>
       )}
       <p className="mt-3 text-xs text-slate-400">
-        Prix indicatifs d'une carte non gradée, fournis par TCGdex d'après Cardmarket.
+        Cote globale Cardmarket (toutes langues et tous états confondus), fournie par TCGdex. Dans ta collection, elle
+        est ajustée selon la langue et l'état de ton exemplaire, ou remplacée par ton propre prix.
       </p>
     </div>
   )

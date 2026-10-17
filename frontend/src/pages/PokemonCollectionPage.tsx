@@ -102,8 +102,9 @@ export function PokemonCollectionPage() {
 
       {data && items.length > 0 && (
         <p className="text-xs text-slate-400">
-          Valeur estimée d'après la cote Cardmarket d'une carte non gradée (cote holo pour les reverse et holo). Les
-          cartes gradées valent souvent bien plus.
+          Valeur = ton prix s'il est saisi (étiquette « mon prix »), sinon une estimation : cote Cardmarket de la
+          variante × coefficient de langue × coefficient d'état. Pour les cartes gradées, saisis ton prix : la cote
+          Cardmarket concerne les cartes non gradées.
         </p>
       )}
     </div>

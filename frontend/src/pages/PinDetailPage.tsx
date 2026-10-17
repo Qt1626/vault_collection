@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { EDITION_LABELS, PARK_LABELS, STATUSES, STATUS_LABELS, type CollectionStatus } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
+import { PinCopyEditor } from '../components/PinCopyEditor'
 import { PinImage } from '../components/PinImage'
 import { Button, ErrorBox } from '../components/ui'
 
@@ -35,6 +36,7 @@ export function PinDetailPage() {
 
   const { pin, owners, wishlisted, forTrade } = pinQuery.data
   const inList = (s: CollectionStatus) => myItems.data?.some((i) => i.pin.id === id && i.status === s) ?? false
+  const myCopies = myItems.data?.filter((i) => i.pin.id === id) ?? []
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
@@ -81,6 +83,14 @@ export function PinDetailPage() {
               ))}
             </div>
             {toggle.error && <ErrorBox message={toggle.error.message} />}
+            {myCopies.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <p className="text-sm font-medium text-slate-700">Mon exemplaire :</p>
+                {myCopies.map((item) => (
+                  <PinCopyEditor key={item.id} item={item} />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-slate-600">

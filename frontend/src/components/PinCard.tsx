@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import { EDITION_LABELS, PARK_LABELS, type Pin } from '../api/types'
+import type { ReactNode } from 'react'
 import { PinImage } from './PinImage'
 
-export function PinCard({ pin, badge }: { pin: Pin; badge?: string }) {
+export function PinCard({ pin, badge, footer }: { pin: Pin; badge?: string; footer?: ReactNode }) {
   return (
     <Link
       to={`/pins/${pin.id}`}
@@ -23,6 +24,7 @@ export function PinCard({ pin, badge }: { pin: Pin; badge?: string }) {
           {pin.editionSize ? ` (LE ${pin.editionSize})` : ''}
         </p>
       </div>
+      {footer}
     </Link>
   )
 }

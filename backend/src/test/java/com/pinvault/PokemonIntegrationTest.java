@@ -96,22 +96,37 @@ class PokemonIntegrationTest {
         String token = register("sacha", "sacha@example.com");
         String body = """
                 {"cardId":"%s","status":"OWNED","quantity":2,"condition":"MINT","variant":"REVERSE",
-                 "language":"FR","gradingCompany":"PSA","grade":9.5,"note":"Boîte 1"}
+                 "language":"FR","gradingCompany":"CCC","grade":9.5,"note":"Boîte 1"}
                 """.formatted(CARD_ID);
 
-        mvc.perform(post("/api/me/pokemon")
+        long id = json.readTree(mvc.perform(post("/api/me/pokemon")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.card.name").value("Fouinar"))
                 .andExpect(jsonPath("$.variant").value("REVERSE"))
                 .andExpect(jsonPath("$.grade").value(9.5))
-                .andExpect(jsonPath("$.unitPrice").value(1.2))   // cote « holo » pour une reverse
-                .andExpect(jsonPath("$.totalPrice").value(2.4));
+                .andExpect(jsonPath("$.marketPrice").value(1.2))     // cote « holo » pour une reverse
+                .andExpect(jsonPath("$.estimatedPrice").value(0.96)) // × 0,80 (FR) × 1,00 (Mint)
+                .andExpect(jsonPath("$.unitPrice").value(0.96))
+                .andExpect(jsonPath("$.totalPrice").value(1.92))
+                .andExpect(jsonPath("$.priceSource").value("ESTIMATE"))
+                .andReturn().getResponse().getContentAsString()).get("id").asLong();
 
         mvc.perform(get("/api/users/sacha/pokemon"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].gradingCompany").value("PSA"));
+                .andExpect(jsonPath("$[0].gradingCompany").value("CCC"));
+
+        // Le prix saisi à la main remplace l'estimation
+        String withPrice = body.replace("\"note\":\"Boîte 1\"", "\"note\":\"Boîte 1\",\"manualPrice\":25");
+        mvc.perform(put("/api/me/pokemon/" + id)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(withPrice))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.manualPrice").value(25.0))
+                .andExpect(jsonPath("$.unitPrice").value(25.0))
+                .andExpect(jsonPath("$.totalPrice").value(50.0))
+                .andExpect(jsonPath("$.priceSource").value("MANUAL"));
     }
 
     @Test

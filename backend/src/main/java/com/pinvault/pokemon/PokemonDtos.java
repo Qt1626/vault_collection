@@ -64,8 +64,13 @@ public final class PokemonDtos {
             CardLanguage language,
             GradingCompany gradingCompany,
             @DecimalMin("1.0") @DecimalMax("10.0") @Digits(integer = 2, fraction = 1) BigDecimal grade,
-            @Size(max = 500) String note) {
+            @Size(max = 500) String note,
+            /* Prix de MON exemplaire (ex. relevé sur Cardmarket) ; vide = estimation automatique. */
+            @DecimalMin("0.0") @Digits(integer = 8, fraction = 2) BigDecimal manualPrice) {
     }
+
+    /** D'où vient la valeur affichée : prix saisi par le membre, ou estimation à partir de Cardmarket. */
+    public enum PriceSource { MANUAL, ESTIMATE }
 
     public record CardItemResponse(
             Long id,
@@ -78,9 +83,15 @@ public final class PokemonDtos {
             GradingCompany gradingCompany,
             BigDecimal grade,
             String note,
-            /* Cote Cardmarket unitaire d'une carte non gradée dans cette variante (null si inconnue). */
+            /* Cote Cardmarket brute (toutes langues et tous états) pour cette variante. */
+            BigDecimal marketPrice,
+            /* Cote ajustée selon la langue et l'état de l'exemplaire. */
+            BigDecimal estimatedPrice,
+            BigDecimal manualPrice,
+            /* Valeur unitaire retenue : prix manuel s'il existe, sinon estimation. */
             BigDecimal unitPrice,
             BigDecimal totalPrice,
+            PriceSource priceSource,
             Instant addedAt) {
     }
 }

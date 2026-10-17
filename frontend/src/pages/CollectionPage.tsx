@@ -5,6 +5,7 @@ import { api } from '../api/client'
 import { STATUSES, STATUS_LABELS, type CollectionStatus } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 import { PinCard } from '../components/PinCard'
+import { PinCopyTags } from '../components/PinCopyEditor'
 import { ErrorBox } from '../components/ui'
 
 /** Ma collection de pin's (/pins/collection) ou celle d'un autre membre (/u/:username/pins). */
@@ -69,7 +70,12 @@ export function CollectionPage() {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {items.map((item) => (
-          <PinCard key={item.id} pin={item.pin} badge={item.quantity > 1 ? `×${item.quantity}` : undefined} />
+          <PinCard
+            key={item.id}
+            pin={item.pin}
+            badge={item.quantity > 1 ? `×${item.quantity}` : undefined}
+            footer={<PinCopyTags item={item} />}
+          />
         ))}
       </div>
     </div>

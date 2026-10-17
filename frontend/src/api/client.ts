@@ -4,6 +4,7 @@ import type {
   CardItemInput,
   CardSearchResult,
   CollectionItem,
+  CollectionItemUpdate,
   CollectionStatus,
   Page,
   Pin,
@@ -93,6 +94,8 @@ export const api = {
   addToCollection: (pinId: number, status: CollectionStatus) =>
     request<CollectionItem>('/me/collection', { method: 'POST', body: JSON.stringify({ pinId, status }) }),
   removeFromCollection: (itemId: number) => request<void>(`/me/collection/${itemId}`, { method: 'DELETE' }),
+  updateCollectionItem: (itemId: number, update: CollectionItemUpdate) =>
+    request<CollectionItem>(`/me/collection/${itemId}`, { method: 'PATCH', body: JSON.stringify(update) }),
 
   // Cartes Pokémon
   searchCards: (q: string, page = 0) =>

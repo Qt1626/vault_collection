@@ -97,7 +97,18 @@ export interface CollectionItem {
   status: CollectionStatus
   quantity: number
   note: string | null
+  /** Défaut de mon exemplaire */
+  defect: string | null
+  /** Avec (true) ou sans (false) le carton d'origine ; null = non précisé */
+  backingCard: boolean | null
   addedAt: string
+}
+
+export interface CollectionItemUpdate {
+  quantity: number
+  note: string | null
+  defect: string | null
+  backingCard: boolean | null
 }
 
 export interface AuthResponse {
@@ -149,11 +160,12 @@ export const LANGUAGE_LABELS: Record<CardLanguage, string> = {
   ZH: 'Chinois',
 }
 
-export const GRADING_COMPANIES = ['PSA', 'PCA', 'CGC', 'BGS', 'SGC', 'COLLECT_AURA', 'OTHER'] as const
+export const GRADING_COMPANIES = ['PSA', 'PCA', 'CCC', 'CGC', 'BGS', 'SGC', 'COLLECT_AURA', 'OTHER'] as const
 export type GradingCompany = (typeof GRADING_COMPANIES)[number]
 export const GRADING_LABELS: Record<GradingCompany, string> = {
   PSA: 'PSA',
   PCA: 'PCA',
+  CCC: 'CCC',
   CGC: 'CGC',
   BGS: 'BGS (Beckett)',
   SGC: 'SGC',
@@ -204,12 +216,42 @@ export interface CardItemInput {
   gradingCompany: GradingCompany | null
   grade: number | null
   note: string | null
+  /** Prix de mon exemplaire ; null = estimation automatique */
+  manualPrice: number | null
 }
 
 export interface CardItem extends Omit<CardItemInput, 'cardId'> {
   id: number
   card: PokemonCard
+  /** Cote Cardmarket brute (toutes langues et tous états) */
+  marketPrice: number | null
+  /** Cote ajustée selon la langue et l'état */
+  estimatedPrice: number | null
+  /** Valeur retenue : prix manuel sinon estimation */
   unitPrice: number | null
   totalPrice: number | null
+  priceSource: 'MANUAL' | 'ESTIMATE' | null
   addedAt: string
+}
+
+/** Coefficients appliqués à la cote Cardmarket (identiques à ceux du serveur, pour l'aperçu du formulaire). */
+export const CONDITION_FACTORS: Record<CardCondition, number> = {
+  MINT: 1,
+  NEAR_MINT: 1,
+  EXCELLENT: 0.85,
+  GOOD: 0.7,
+  LIGHT_PLAYED: 0.6,
+  PLAYED: 0.45,
+  POOR: 0.3,
+}
+export const LANGUAGE_FACTORS: Record<CardLanguage, number> = {
+  EN: 1,
+  FR: 0.8,
+  JP: 0.7,
+  DE: 0.6,
+  IT: 0.5,
+  ES: 0.5,
+  KO: 0.5,
+  PT: 0.4,
+  ZH: 0.4,
 }

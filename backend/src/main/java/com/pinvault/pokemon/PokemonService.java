@@ -10,6 +10,7 @@ import com.pinvault.pokemon.PokemonDtos.CardItemRequest;
 import com.pinvault.pokemon.PokemonDtos.CardItemResponse;
 import com.pinvault.pokemon.PokemonDtos.CardResponse;
 import com.pinvault.pokemon.PokemonDtos.CardSearchResponse;
+import com.pinvault.pokemon.PokemonDtos.PriceSource;
 import com.pinvault.pokemon.TcgdexDtos.TcgdexCard;
 import com.pinvault.pokemon.TcgdexDtos.TcgdexCardmarket;
 import com.pinvault.user.AppUser;
@@ -206,13 +207,31 @@ public class PokemonService {
         item.setGradingCompany(req.gradingCompany());
         item.setGrade(req.grade() == null ? null : req.grade().setScale(1, RoundingMode.HALF_UP));
         item.setNote(req.note() == null || req.note().isBlank() ? null : req.note().trim());
+        item.setManualPrice(req.manualPrice() == null ? null : req.manualPrice().setScale(2, RoundingMode.HALF_UP));
+    }
+
+    /**
+     * Estimation d'un exemplaire : cote Cardmarket de la variante (qui mélange langues et états)
+     * × coefficient de langue × coefficient d'état. Cardmarket ne propose plus d'API ouverte,
+     * donc les prix par langue et par état ne sont pas disponibles directement.
+     */
+    static BigDecimal estimate(BigDecimal marketPrice, CardLanguage language, CardCondition condition) {
+        if (marketPrice == null) {
+            return null;
+        }
+        return marketPrice.multiply(language.priceFactor()).multiply(condition.priceFactor())
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     private static CardItemResponse toResponse(CardCollectionItem i) {
-        BigDecimal unit = i.getCard().marketPrice(i.getVariant());
+        BigDecimal market = i.getCard().marketPrice(i.getVariant());
+        BigDecimal estimated = estimate(market, i.getLanguage(), i.getCondition());
+        BigDecimal unit = i.getManualPrice() != null ? i.getManualPrice() : estimated;
         BigDecimal total = unit == null ? null : unit.multiply(BigDecimal.valueOf(i.getQuantity()));
+        PriceSource source = i.getManualPrice() != null ? PriceSource.MANUAL
+                : estimated != null ? PriceSource.ESTIMATE : null;
         return new CardItemResponse(i.getId(), CardResponse.from(i.getCard()), i.getStatus(), i.getQuantity(),
                 i.getCondition(), i.getVariant(), i.getLanguage(), i.getGradingCompany(), i.getGrade(),
-                i.getNote(), unit, total, i.getAddedAt());
+                i.getNote(), market, estimated, i.getManualPrice(), unit, total, source, i.getAddedAt());
     }
 }

@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import {
   CARD_STATUS_LABELS,
   CONDITIONS,
+  CONDITION_FACTORS,
   CONDITION_LABELS,
   GRADING_COMPANIES,
   GRADING_LABELS,
   LANGUAGES,
+  LANGUAGE_FACTORS,
   LANGUAGE_LABELS,
   STATUSES,
   VARIANTS,
@@ -17,6 +19,8 @@ import {
   type CardVariant,
   type PokemonCard,
 } from '../api/types'
+import { formatEuro } from './format'
+import { cardmarketUrl, estimatePrice } from './pricing'
 import { Button, ErrorBox, Field, Input, Select } from './ui'
 
 /** Image TCGdex : l'API fournit une URL de base à compléter par la qualité voulue. */
@@ -85,7 +89,12 @@ function availableVariants(card: PokemonCard): CardVariant[] {
   return list.length > 0 ? list : [...VARIANTS]
 }
 
-type FormState = Omit<CardItemInput, 'cardId' | 'quantity' | 'grade'> & { quantity: string; grade: string; graded: boolean }
+type FormState = Omit<CardItemInput, 'cardId' | 'quantity' | 'grade' | 'manualPrice'> & {
+  quantity: string
+  grade: string
+  graded: boolean
+  manualPrice: string
+}
 
 function initialState(card: PokemonCard, item?: CardItem): FormState {
   return {
@@ -98,6 +107,7 @@ function initialState(card: PokemonCard, item?: CardItem): FormState {
     gradingCompany: item?.gradingCompany ?? 'PSA',
     grade: item?.grade != null ? String(item.grade) : '10',
     note: item?.note ?? '',
+    manualPrice: item?.manualPrice != null ? String(item.manualPrice) : '',
   }
 }
 
@@ -134,8 +144,11 @@ export function CardItemForm({
       gradingCompany: form.graded ? form.gradingCompany : null,
       grade: form.graded ? Number(form.grade.replace(',', '.')) : null,
       note: form.note?.trim() || null,
+      manualPrice: form.manualPrice.trim() ? Number(form.manualPrice.replace(',', '.')) : null,
     })
   }
+
+  const estimate = estimatePrice(card, form.variant, form.language, form.condition)
 
   return (
     <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
@@ -228,6 +241,43 @@ export function CardItemForm({
         </Field>
       </div>
 
+      <div className="space-y-2 rounded-lg bg-slate-50 p-3 sm:col-span-2">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+          <span>
+            Estimation : <span className="font-semibold text-brand-600">{formatEuro(estimate)}</span>
+            <span className="text-xs text-slate-500">
+              {' '}
+              (cote Cardmarket × {LANGUAGE_FACTORS[form.language].toLocaleString('fr-FR')} langue ×{' '}
+              {CONDITION_FACTORS[form.condition].toLocaleString('fr-FR')} état)
+            </span>
+          </span>
+          <a
+            href={cardmarketUrl(card, form.language, form.condition)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs font-semibold text-brand-600 hover:underline"
+          >
+            Voir le prix réel sur Cardmarket ↗
+          </a>
+        </div>
+        <Field label="Mon prix (€) — facultatif, remplace l'estimation">
+          <Input
+            type="number"
+            min={0}
+            step={0.01}
+            inputMode="decimal"
+            placeholder={estimate != null ? `ex. ${estimate.toLocaleString('fr-FR')}` : 'ex. 12,50'}
+            value={form.manualPrice}
+            onChange={(e) => set('manualPrice', e.target.value)}
+          />
+        </Field>
+        {form.graded && (
+          <p className="text-xs text-slate-500">
+            Carte gradée : la cote Cardmarket concerne les cartes non gradées, pense à saisir ton prix.
+          </p>
+        )}
+      </div>
+
       {error && (
         <div className="sm:col-span-2">
           <ErrorBox message={error.message} />
@@ -265,6 +315,9 @@ export function CardItemTags({ item }: { item: CardItem }) {
         <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800">
           {GRADING_LABELS[item.gradingCompany].split(' ')[0]} {item.grade}
         </span>
+      )}
+      {item.priceSource === 'MANUAL' && (
+        <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-800">mon prix</span>
       )}
     </div>
   )

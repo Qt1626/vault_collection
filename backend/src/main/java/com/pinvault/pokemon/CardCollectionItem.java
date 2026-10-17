@@ -53,6 +53,10 @@ public class CardCollectionItem {
     @Column(length = 500)
     private String note;
 
+    /** Prix saisi par le membre : remplace l'estimation automatique s'il est renseigné. */
+    @Column(name = "manual_price", precision = 10, scale = 2)
+    private BigDecimal manualPrice;
+
     @Column(name = "added_at", nullable = false, updatable = false)
     private Instant addedAt = Instant.now();
 
@@ -75,6 +79,7 @@ public class CardCollectionItem {
     public GradingCompany getGradingCompany() { return gradingCompany; }
     public BigDecimal getGrade() { return grade; }
     public String getNote() { return note; }
+    public BigDecimal getManualPrice() { return manualPrice; }
     public Instant getAddedAt() { return addedAt; }
 
     public void setStatus(CollectionStatus status) { this.status = status; }
@@ -85,4 +90,5 @@ public class CardCollectionItem {
     public void setGradingCompany(GradingCompany gradingCompany) { this.gradingCompany = gradingCompany; }
     public void setGrade(BigDecimal grade) { this.grade = grade; }
     public void setNote(String note) { this.note = note; }
+    public void setManualPrice(BigDecimal manualPrice) { this.manualPrice = manualPrice; }
 }

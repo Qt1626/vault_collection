@@ -103,6 +103,33 @@ class PinVaultIntegrationTest {
     }
 
     @Test
+    void ownedPinKeepsDefectAndBackingCard() throws Exception {
+        String token = register("frank", "frank@example.com");
+        long pinId = json.readTree(mvc.perform(post("/api/pins")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Pin défaut\",\"park\":\"OTHER\",\"edition\":\"OPEN_EDITION\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString()).get("id").asLong();
+
+        long itemId = json.readTree(mvc.perform(post("/api/me/collection")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"pinId\":" + pinId + ",\"status\":\"OWNED\",\"backingCard\":true}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.backingCard").value(true))
+                .andReturn().getResponse().getContentAsString()).get("id").asLong();
+
+        mvc.perform(patch("/api/me/collection/" + itemId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantity\":1,\"defect\":\"Petite rayure\",\"backingCard\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defect").value("Petite rayure"))
+                .andExpect(jsonPath("$.backingCard").value(false));
+    }
+
+    @Test
     void uploadImageThenUseItOnAPin() throws Exception {
         String token = register("carol", "carol@example.com");
         byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
